@@ -1,0 +1,66 @@
+---
+title: Mixed Models Analysis and Data Visualization of Political Affiliation's Impact on Perception and Sentiment
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+# Load required libraries and data
+
+if (!require("lme4")) install.packages("lme4")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("tidyr")) install.packages("tidyr")
+
+library(lme4)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+data <- read.csv("data/strategic_signaling_data_long.csv")
+```
+
+# Mixed Models Analysis
+```{r}
+# Model for avg_perceived
+model_perceived <- lmer(avg_perceived ~ poli_affil + (1|tweet), data = data)
+
+# Model for avg_sentiment
+model_sentiment <- lmer(avg_sentiment ~ poli_affil + (1|tweet), data = data)
+
+# Summaries
+summary(model_perceived)
+summary(model_sentiment)
+```
+
+# Results Summary
+The mixed models analysis suggests that political affiliation has a significant effect on both average perception (`avg_perceived`) and average sentiment (`avg_sentiment`).
+
+### Key Findings:
+
+The mixed models analysis suggests that political affiliation has a significant effect on both average perception (`avg_perceived`) and average sentiment (`avg_sentiment`).
+
+#### - Average Perception (`avg_perceived`)
+
+- Individuals with a "right" political affiliation tend to have a significantly higher average perception (0.43 units higher) compared to those with the reference political affiliation. 
+
+#### - Average Sentiment (`avg_sentiment`)
+- Individuals with a "right" political affiliation also show a significant increase in average sentiment (0.073 units higher) compared to those with the reference political affiliation.
+
+# Bar Plot
+```{r}
+# Prepare data for the bar plot
+plot_data <- data %>%
+  group_by(poli_affil) %>%
+    summarize(avg_perceived = mean(avg_perceived, na.rm = TRUE), avg_sentiment = mean(avg_sentiment, na.rm = TRUE))
+ 
+# Convert data to long format for ggplot2
+plot_data_long <- plot_data %>%
+  pivot_longer(cols = c(avg_perceived, avg_sentiment), names_to = "measure", values_to = "value")
+
+# Create the bar plot
+ggplot(plot_data_long, aes(x = poli_affil, y = value, fill = poli_affil)) +
+  geom_bar(stat = "identity", position = "dodge") +
+    facet_wrap(~ measure, scales = "free_y") +
+      labs(title = "Average Perceived and Sentiment by Political Affiliation", x = "Political Affiliation", y = "Average Value") +
+        theme_minimal()
+```
